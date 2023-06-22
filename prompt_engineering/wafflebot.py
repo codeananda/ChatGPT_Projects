@@ -1,3 +1,5 @@
+"""A chatbot that helps the user order food from a restaurant."""
+
 import os
 
 import openai
