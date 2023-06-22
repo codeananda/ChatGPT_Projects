@@ -39,6 +39,7 @@ If it's a delivery, ask them for their address. \
 If it's pick up, tell them our address: 123 Waffle House Lane, London. \
 Finally collect the payment. Ask if they want to pay by credit card or cash. \
 If they say credit card say 'Please click the link below to pay by credit card'. \
+If they say cash, say they can pay when they pick up the order or pay the delivery driver. \
 Make sure to clarify all options, extras and sizes to uniquely identify the order. \
 The menu is: \
 Waffle type: normal ($10), gluten-free ($10), protein ($1 extra) \
@@ -48,7 +49,7 @@ Drinks: coffee, orange juice, milk, water \
 Each drink costs $2 \
 Once the order is complete, output the order summary and total cost in JSON format. \
 Itemize the price for each item. The fields should be 1) waffle_type, 2) list of toppings \
-3) list of drinks, 4) total price
+3) list of drinks, 4) total price (float)
 """
 
 initial_state = [
