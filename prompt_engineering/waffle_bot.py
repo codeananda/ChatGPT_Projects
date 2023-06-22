@@ -11,7 +11,8 @@ from streamlit_chat import message
 st.set_page_config(page_title="Waffle House Order Bot", page_icon=":waffle:")
 st.title("Waffle House Order Bot 🧇")
 intro = """Welcome to the Waffle House, the place where all your waffle filled dreams come true.
-Start chatting with WaffleBot below to find out what you can order, how much it costs and how to pay."""
+
+Start chatting with WaffleBot below to find out what you can order, how much it costs, and how to pay."""
 st.markdown(intro)
 attribution = f"Created by [Adam Murphy](https://github.com/codeananda)"
 attribution += f" - [Source Code](https://github.com/codeananda/ChatGPT_Projects/blob/main/prompt_engineering/WaffleHouse.py)"
