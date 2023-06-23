@@ -6,7 +6,7 @@ import openai
 import streamlit as st
 from dotenv import load_dotenv, find_dotenv
 from streamlit_chat import message
-from ..streamlit_helpers import generate_response
+from streamlit_helpers import generate_response
 
 # MODEL = "gpt-3.5-turbo"
 
