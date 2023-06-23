@@ -73,7 +73,6 @@ if clear_button:
     st.session_state["generated"] = []
     st.session_state["past"] = []
     st.session_state["messages"] = initial_state
-    st.session_state["number_tokens"] = []
 
 
 # generate a response
