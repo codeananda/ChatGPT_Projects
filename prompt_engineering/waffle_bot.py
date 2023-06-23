@@ -62,12 +62,6 @@ initial_state = [
 ]
 if "messages" not in st.session_state:
     st.session_state["messages"] = initial_state
-if "cost" not in st.session_state:
-    st.session_state["cost"] = []
-if "total_tokens" not in st.session_state:
-    st.session_state["total_tokens"] = []
-if "total_cost" not in st.session_state:
-    st.session_state["total_cost"] = 0.0
 
 # Sidebar - let user clear the current conversation
 clear_button = st.sidebar.button("Clear Conversation", key="clear")
@@ -80,10 +74,6 @@ if clear_button:
     st.session_state["past"] = []
     st.session_state["messages"] = initial_state
     st.session_state["number_tokens"] = []
-    # st.session_state['model_name'] = []
-    st.session_state["cost"] = []
-    st.session_state["total_cost"] = 0.0
-    st.session_state["total_tokens"] = []
 
 
 # generate a response
@@ -95,12 +85,7 @@ def generate_response(prompt):
     )
     response = completion.choices[0].message.content
     st.session_state["messages"].append({"role": "assistant", "content": response})
-
-    # print(st.session_state['messages'])
-    total_tokens = completion.usage.total_tokens
-    prompt_tokens = completion.usage.prompt_tokens
-    completion_tokens = completion.usage.completion_tokens
-    return response, total_tokens, prompt_tokens, completion_tokens
+    return response
 
 
 wh_avatar = "thumbs"
@@ -122,9 +107,7 @@ with input_container:
         submit_button = st.form_submit_button(label="Send")
 
     if submit_button and user_input:
-        output, total_tokens, prompt_tokens, completion_tokens = generate_response(
-            user_input
-        )
+        output = generate_response(user_input)
         st.session_state["past"].append(user_input)
         st.session_state["generated"].append(output)
 
