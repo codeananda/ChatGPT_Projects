@@ -8,25 +8,10 @@ from dotenv import load_dotenv, find_dotenv
 from streamlit_chat import message
 from streamlit_helpers import generate_response
 
-# MODEL = "gpt-3.5-turbo"
-
 # Set org ID and API key
 _ = load_dotenv(find_dotenv())
 openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.organization = os.getenv("OPENAI_ORG_ID")
-
-
-# def generate_response(prompt):
-#     """Send prompt to OpenAI and return the response. Add the prompt and response to the session state."""
-#     st.session_state["messages"].append({"role": "user", "content": prompt})
-#
-#     completion = openai.ChatCompletion.create(
-#         model=MODEL, messages=st.session_state["messages"]
-#     )
-#     response = completion.choices[0].message.content
-#     st.session_state["messages"].append({"role": "assistant", "content": response})
-#     return response
-
 
 def get_system_prompt():
     """Define system prompt for the chatbot."""
