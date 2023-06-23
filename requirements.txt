@@ -1,3 +1,4 @@
+pip
 openai
 streamlit
 streamlit-chat
