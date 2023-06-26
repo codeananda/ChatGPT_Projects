@@ -26,7 +26,7 @@ Then enter some text and I'll give you corrections and suggestions to improve yo
 Don't know what to write? Click one of the example sentences below to get some ideas."""
 st.markdown(intro)
 
-attribution = f"""Created by [Adam Murphy](https://github.com/codeananda) - \
+attribution = f"""Made with ❤️ by [Adam Murphy](https://github.com/codeananda) - \
 [Source Code](https://github.com/codeananda/ChatGPT_Projects/blob/main/language_tutor/language_tutor.py)
 
 Need a chatbot built? Reach out via my [Upwork profile](https://www.upwork.com/freelancers/~01153ca9fd0099730e) \
