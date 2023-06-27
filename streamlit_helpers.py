@@ -92,15 +92,8 @@ def footer(*args: list):
         opacity=1,
     )
 
-    style_hr = styles(
-        display="block",
-        margin=px(0, 0, "auto", "auto"),
-        border_style="inset",
-        border_width=px(0),
-    )
-
     body = p()
-    foot = div(style=style_div)(hr(style=style_hr), body)
+    foot = div(style=style_div)(body)
 
     st.markdown(style, unsafe_allow_html=True)
 
