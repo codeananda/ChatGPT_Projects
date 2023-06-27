@@ -15,11 +15,17 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.organization = os.getenv("OPENAI_ORG_ID")
 
 # Setting page title and header
-title = "Langy - The Interactive Language Tutor"
+title = "Langy - The Interactive AI Language Tutor"
 st.set_page_config(page_title=title, page_icon=":mortar_board:")
 st.title(":mortar_board: " + title)
 
+# Intro
+intro = """Hi! I'm Langy, an AI bot to help you improve your foreign language writing skills. 
 
+Enter some text, then I'll correct it and tell you why."""
+st.markdown(intro)
+
+# Footer
 footer_elements = myargs = [
     "Made with ❤️ by ",
     link("https://github.com/codeananda", "Adam Murphy"),
@@ -37,22 +43,6 @@ footer_elements = myargs = [
     "! 🤝",
 ]
 footer(*footer_elements)
-
-intro = """Hi! I'm Langy, an AI bot to help you improve your foreign language writing skills. 
-
-Select the language you want to practice and the level you want to practice at in the sidebar. 
-Then enter some text and I'll give you corrections and suggestions to improve your writing.
-
-Don't know what to write? Click one of the example sentences below to get some ideas."""
-st.markdown(intro)
-
-attribution = f"""Made with ❤️ by [Adam Murphy](https://github.com/codeananda) - \
-[Source Code](https://github.com/codeananda/ChatGPT_Projects/blob/main/language_tutor/language_tutor.py)
-
-Need a chatbot built? Reach out via my [Upwork profile](https://www.upwork.com/freelancers/~01153ca9fd0099730e) \
-to schedule a call and see how I can help."""
-st.markdown(attribution)
-st.markdown("---")
 
 
 def get_system_prompt():
