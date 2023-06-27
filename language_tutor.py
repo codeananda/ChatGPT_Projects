@@ -6,7 +6,8 @@ import streamlit as st
 from dotenv import load_dotenv, find_dotenv
 from redlines import Redlines
 from streamlit_chat import message
-from streamlit_helpers import generate_response
+from streamlit_helpers import generate_response, footer, link
+from htbuilder import br
 
 # Set org ID and API key
 _ = load_dotenv(find_dotenv())
@@ -16,7 +17,26 @@ openai.organization = os.getenv("OPENAI_ORG_ID")
 # Setting page title and header
 title = "Langy - The Interactive Language Tutor"
 st.set_page_config(page_title=title, page_icon=":mortar_board:")
-st.title(':mortar_board: ' + title)
+st.title(":mortar_board: " + title)
+
+
+footer_elements = myargs = [
+    "Made with ❤️ by ",
+    link("https://github.com/codeananda", "Adam Murphy"),
+    " - ",
+    link(
+        "https://github.com/codeananda/ChatGPT_Projects/blob/main/language_tutor/language_tutor.py",
+        "Source Code",
+    ),
+    br(),
+    "Like what you see? Let's ",
+    link(
+        "https://www.upwork.com/freelancers/~01153ca9fd0099730e",
+        "work together",
+    ),
+    "! 🤝",
+]
+footer(*footer_elements)
 
 intro = """Hi! I'm Langy, an AI bot to help you improve your foreign language writing skills. 
 
@@ -41,7 +61,8 @@ def get_system_prompt():
     You are a friendly German language language tutor here to help students improve
     their writing skills.
     
-    All your responses must be in JSON format.
+    All your output must be in JSON format.
+    Under no circumstances should you output anything extra. Only JSON object, at all times.
     """
     system_prompt = system_prompt.replace("\n", " ")
     return system_prompt
@@ -58,7 +79,8 @@ def get_prompt(german_text):
     1. Classify the level of the input text as A1, A2, B1, B2, C1, or C2.
     2. Give a reason for the classification.
     3. Correct the grammar and spelling of the input text. Find all mistakes and provide
-    all possible corrections so that it is in perfect German.
+    all possible corrections so that it is in perfect German. Keep paragraph breaks in tact.
+    Paragraph breaks are not mistakes.
     
     Output Format
     Output the results as a JSON object with the following fields:
@@ -70,6 +92,7 @@ def get_prompt(german_text):
     """
     prompt = prompt.replace("\n", " ")
     return prompt
+
 
 def write_response_to_screen(user_input, response):
     """Parse the response from the chatbot and format nicely for viewing."""
@@ -125,6 +148,7 @@ with input_container:
         # Clear input area after submit
         st.session_state["messages"] = initial_state
         response = generate_response(get_prompt(user_input))
+        response
         write_response_to_screen(user_input, response)
 
 
@@ -132,4 +156,9 @@ example_sentence = """
 Hallo, ich heisse Adam. Ich habe 25 Jahre alt. Ich wohne in England seit 15 Jahren
 aber ich wuerde gerne irgendwo anders wohnen. Ich liebe es zu reisen. Meiner Meinung 
 nach, ist man wirklich am leben, wenn man reist. 
+"""
+
+two = """
+Hey Alter, wie geht es dir denn so? Hast du Kohle? Ich bin Deutscher aber 
+habe tuerkische Wurzeln, deshalb habe ich Akzent.
 """
