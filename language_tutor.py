@@ -58,7 +58,6 @@ def get_system_prompt():
     All your output must be in JSON format.
     Under no circumstances should you output anything extra. Only JSON object, at all times.
     """
-    system_prompt = system_prompt.replace("\n", " ")
     return system_prompt
 
 
@@ -87,7 +86,6 @@ def convert_input_to_prompt(german_text):
     
     Do not output anything else other than the JSON object.
     """
-    prompt = prompt.replace("\n", " ")
     return prompt
 
 
@@ -109,12 +107,10 @@ def write_response_to_screen(user_input: str, response: str, placeholder: st.del
         try:
             response = json.loads(response)
         except JSONDecodeError:
-            st.markdown('JSONDecodeError: trying again...')
             first_brace = response.find("{")
             last_brace = response.rfind("}")
             response = response[first_brace : last_brace + 1]
             response = json.loads(response)
-            st.markdown('Successfully parsed JSON response.')
         comparison = Redlines(user_input, response["corrected_text"])
         corrected_text = comparison.output_markdown
         st.markdown(f'## Level: {response["level"]}')
@@ -139,7 +135,13 @@ def write_response_to_screen(user_input: str, response: str, placeholder: st.del
         Do not output anything else other than the JSON object.
         """
         reason_response = generate_response(reasoning_prompt)
-        reason_response = json.loads(reason_response)
+        try:
+            reason_response = json.loads(reason_response)
+        except JSONDecodeError:
+            first_brace = reason_response.find("{")
+            last_brace = reason_response.rfind("}")
+            reason_response = reason_response[first_brace : last_brace + 1]
+            reason_response = json.loads(reason_response)
         for i, reason in reason_response.items():
             if 'no correction' in reason.lower():
                 continue
