@@ -52,7 +52,7 @@ def get_system_prompt():
     """Define system prompt for the chatbot. It is a language tutor there to correct
     mistakes in a foreign language."""
     system_prompt = """
-    You are a friendly German language language tutor here to help students improve
+    You are a friendly language language tutor here to help students improve
     their writing skills.
     
     All your output must be in JSON format.
@@ -61,22 +61,22 @@ def get_system_prompt():
     return system_prompt
 
 
-def convert_input_to_prompt(german_text):
+def convert_input_to_prompt(input_text):
     """Convert users input text in a foregin language, into a prompt that classifies
     the text level, gives a reason, and provides corrections."""
 
     prompt = f"""
     Please perform the following analysis on the student's input text, delimited by 
     ####
-    Input text: ####{german_text}####
+    Input text: ####{input_text}####
     
     Steps
     1. Classify the level of the input text as A1 (Lower Beginner), A2 (Upper Beginner), 
     B1 (Lower Intermediate), B2 (Upper Intermediate), C1 (Lower Advanced), or C2 (Upper Advanced).
     2. Give a reason for the classification.
     3. Correct the grammar and spelling of the input text. Find all mistakes and provide
-    all possible corrections so that it is in perfect German. Keep paragraph breaks in tact.
-    Paragraph breaks are not mistakes.
+    all possible corrections so that it is perfect and as if a native speaker had written
+    it.
     
     Output Format
     Output the results as a JSON object with the following fields:
@@ -89,7 +89,9 @@ def convert_input_to_prompt(german_text):
     return prompt
 
 
-def write_response_to_screen(user_input: str, response: str, placeholder: st.delta_generator.DeltaGenerator):
+def write_response_to_screen(
+    user_input: str, response: str, placeholder: st.delta_generator.DeltaGenerator
+):
     """Parse the response from the chatbot and format nicely for viewing.
 
     Parameters
@@ -116,16 +118,19 @@ def write_response_to_screen(user_input: str, response: str, placeholder: st.del
         st.markdown(f'## Level: {response["level"]}')
         st.markdown(f'{response["level_reason"]}')
         st.markdown(
-            'See [Common European Framework of Reference for Languages]'
-            '(https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages)'
-            ' for more information on language levels.'
+            "See [Common European Framework of Reference for Languages]"
+            "(https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages)"
+            " for more information on language levels."
         )
         st.markdown(f"## Corrected Text")
         st.markdown(corrected_text, unsafe_allow_html=True)
         st.markdown("## Correction Reasons")
         reasoning_prompt = f"""
         Please provide a reason for each correction in the corrected text delimited by
-        ####. 
+        ####. Each incorrect bit is wrapped in <span> HTML tags and the style attribute
+        contains text-decoration:line-through. Only provide reasons for these corrections.
+        Do not repeat yourself. If the user inputs words in multiple languages, translate them
+        to the target language. 
         
         Corrected text: ####{corrected_text}####
         
@@ -143,7 +148,7 @@ def write_response_to_screen(user_input: str, response: str, placeholder: st.del
             reason_response = reason_response[first_brace : last_brace + 1]
             reason_response = json.loads(reason_response)
         for i, reason in reason_response.items():
-            if 'no correction' in reason.lower():
+            if "no correction" in reason.lower():
                 continue
             st.markdown(f"{i}. {reason}")
     return response
@@ -165,8 +170,10 @@ if clear_button:
 output_space = st.empty()
 
 with st.form(key="my_form", clear_on_submit=True):
-    user_input = st.text_area("You:", height=100)
-    submit_button = st.form_submit_button(label="Send")
+    user_input = st.text_area(
+        "Enter Some Text", height=100, placeholder="Ich habe 25 Jahre alt."
+    )
+    submit_button = st.form_submit_button(label="Correct Text")
 
 if submit_button and user_input:
     # st.markdown(f'This is the current user input: {user_input}')
