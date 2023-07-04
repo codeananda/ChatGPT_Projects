@@ -6,12 +6,13 @@ import openai
 import streamlit as st
 from dotenv import load_dotenv, find_dotenv
 from streamlit_chat import message
-from streamlit_helpers import generate_response
+from streamlit_helpers import generate_response, footer
 
 # Set org ID and API key
 _ = load_dotenv(find_dotenv())
 openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.organization = os.getenv("OPENAI_ORG_ID")
+
 
 def get_system_prompt():
     """Define system prompt for the chatbot."""
@@ -50,18 +51,13 @@ intro = """Welcome to the Waffle House, the place where all your waffle filled d
 Start chatting with WaffleBot below to find out what you can order, how much it costs, and how to pay."""
 st.markdown(intro)
 
-attribution = f"""Created by [Adam Murphy](https://github.com/codeananda) - \
-[Source Code](https://github.com/codeananda/ChatGPT_Projects/blob/main/prompt_engineering/waffle_bot.py)
-
-Need a chatbot built? Reach out via my [Upwork profile](https://www.upwork.com/freelancers/~01153ca9fd0099730e) \
-to schedule a call and see how I can help."""
-st.markdown(attribution)
-
-st.markdown("---")
+# Add footer
+source_link = "https://github.com/codeananda/ChatGPT_Projects/blob/main/waffle_bot.py"
+footer(source_link)
 
 initial_state = [
     {"role": "system", "content": get_system_prompt()},
-    {'role': 'assistant', 'content': '👋 Welcome to Waffle House! What can I get for you?'}
+    {"role": "assistant", "content": "👋 Welcome to Waffle House! What can I get for you?"},
 ]
 
 if "messages" not in st.session_state:
@@ -90,5 +86,5 @@ if st.session_state["messages"]:
         for message_ in st.session_state.messages:
             if message_["role"] == "user":
                 message(message_["content"], is_user=True)
-            elif message_['role'] == 'assistant':
-                message(message_["content"], avatar_style='thumbs')
+            elif message_["role"] == "assistant":
+                message(message_["content"], avatar_style="thumbs")

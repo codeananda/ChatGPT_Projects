@@ -28,24 +28,9 @@ Enter some text, then I'll correct it, and explain my reasoning.
 I'm not perfect. Sometimes you'll get odd responses. Running it again usually helps. 🔄"""
 st.markdown(intro)
 
-# Footer
-footer_elements = myargs = [
-    "Made with ❤️ by ",
-    link("https://github.com/codeananda", "Adam Murphy"),
-    " - ",
-    link(
-        "https://github.com/codeananda/ChatGPT_Projects/blob/main/language_tutor/language_tutor.py",
-        "Source Code",
-    ),
-    br(),
-    "Like what you see? Let's ",
-    link(
-        "https://www.upwork.com/freelancers/~01153ca9fd0099730e",
-        "work together",
-    ),
-    "! 🤝",
-]
-footer(*footer_elements)
+# Add footer
+source_link = "https://github.com/codeananda/ChatGPT_Projects/blob/main/language_tutor.py"
+footer(source_link)
 
 
 def get_system_prompt():

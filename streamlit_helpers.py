@@ -41,35 +41,19 @@ def link(link, text, **style):
     return a(_href=link, _target="_blank", style=styles(**style))(text)
 
 
-def footer(*args: list):
+def footer(source_code_link: str):
     """Add footer at the bottom of your Streamlit app.
     Adapted from https://discuss.streamlit.io/t/st-footer/6447
 
     Parameters
     ----------
-    *args : list
-        List of strings, links, or br elements to display in the footer. They will all be combined
-        together.
+    source_code_link : str
+        Link to the source code of your Streamlit app.
 
-    Example Input Parameters
+    Example Usage
     ------------------------
-    >>> footer_elements = myargs = [
-        "Made with ❤️ by ",
-        link("https://github.com/codeananda", "Adam Murphy"),
-        " - ",
-        link(
-            "https://github.com/codeananda/ChatGPT_Projects/blob/main/language_tutor/language_tutor.py",
-            "Source Code",
-        ),
-        br(),
-        "Like what you see? Let's ",
-        link(
-            "https://www.upwork.com/freelancers/~01153ca9fd0099730e",
-            "work together",
-        ),
-        "! 🤝",
-    ]
-    >>> footer(*footer_elements)
+    >>> link = "https://example.com/"
+    >>> footer(link)
     """
 
     style = """
@@ -97,7 +81,21 @@ def footer(*args: list):
 
     st.markdown(style, unsafe_allow_html=True)
 
-    for arg in args:
+    footer_content = [
+        "Made with ❤️ by ",
+        link("https://github.com/codeananda", "Adam Murphy"),
+        " - ",
+        link(source_code_link, "Source Code"),
+        br(),
+        "Like what you see? Let's ",
+        link(
+            "https://www.upwork.com/freelancers/~01153ca9fd0099730e",
+            "work together",
+        ),
+        "! 🤝",
+    ]
+
+    for arg in footer_content:
         if isinstance(arg, (str, HtmlElement)):
             body(arg)
 
