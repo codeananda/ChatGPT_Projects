@@ -1,19 +1,15 @@
-import os
 import json
 from json.decoder import JSONDecodeError
 
 import openai
 import streamlit as st
-from dotenv import load_dotenv, find_dotenv
 from redlines import Redlines
 from streamlit_chat import message
 from streamlit_helpers import generate_response, footer, link
 from htbuilder import br
 
-# Set org ID and API key
-_ = load_dotenv(find_dotenv())
-openai.api_key = os.getenv("OPENAI_API_KEY")
-openai.organization = os.getenv("OPENAI_ORG_ID")
+openai.api_key = st.secrets["OPENAI_API_KEY"]
+openai.organization = st.secrets["OPENAI_ORG_ID"]
 
 # Setting page title and header
 title = "Langy - The Interactive AI Language Tutor"
