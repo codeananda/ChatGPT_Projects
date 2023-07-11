@@ -1,10 +1,13 @@
 from typing import Any
+from textwrap import dedent
 
 import openai
 import streamlit as st
+from langchain import PromptTemplate, ConversationChain
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
+from langchain.memory import ConversationTokenBufferMemory
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import (
     ChatPromptTemplate,
@@ -16,6 +19,8 @@ from pydantic import BaseModel, Field
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 openai.organization = st.secrets["OPENAI_ORG_ID"]
 
+MODEL_TOKEN_LIMIT = 4000
+
 # Setting page title and header
 title = "Langy - The Interactive AI Language Tutor"
 st.set_page_config(page_title=title, page_icon=":mortar_board:")
@@ -25,7 +30,7 @@ st.title(":mortar_board: " + title)
 class StreamingStreamlitCallbackHandler(BaseCallbackHandler):
     """Callback handler for streaming. Only works with LLMs that support streaming."""
 
-    def __init__(self, message_placeholder: st.delta_generator.DeltaGenerator):
+    def __init__(self, message_placeholder: st.delta_generator.DeltaGenerator, message_contents: str = ""):
         """Initialize the callback handler.
 
         Parameters
@@ -34,17 +39,17 @@ class StreamingStreamlitCallbackHandler(BaseCallbackHandler):
             The placeholder where the messages will be streamed to. Typically an st.empty() object.
         """
         self.message_placeholder = message_placeholder
-        self.full_response = ""
+        self.message_contents = message_contents
 
     def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
         """Run on new LLM token. Only available when streaming is enabled."""
-        self.full_response += token
-        self.message_placeholder.markdown(self.full_response + "▌")
+        self.message_contents += token
+        self.message_placeholder.markdown(self.message_contents + "▌")
 
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
         """Run when LLM ends running."""
-        self.message_placeholder.markdown(self.full_response)
-        st.session_state.messages.append({"role": "assistant", "content": self.full_response})
+        self.message_placeholder.markdown(self.message_contents)
+        st.session_state.messages.append({"role": "assistant", "content": self.message_contents})
 
 
 def classify_text_level(prompt, message_placeholder):
@@ -103,6 +108,109 @@ def classify_text_level(prompt, message_placeholder):
     return response
 
 
+def correct_text(prompt, message_placeholder, message_contents=""):
+    llm = ChatOpenAI(
+        temperature=0,
+        streaming=True,
+        callbacks=[StreamingStreamlitCallbackHandler(message_placeholder, message_contents=message_contents)],
+    )
+    correction_template = """The following is a friendly conversation between a human and an AI. The
+    AI is helping the human improve their foreign language writing skills. The human provides texts
+    written in a foreign language and the AI corrects the spelling and grammar of the texts
+    and provides detailed reasons for each correction.
+
+    The AI keeps in in mind spelling, grammar, naturalness (how much it sounds like a native
+    speaker), correct capitalisation, correct placement of commas or other punctuation and
+    anything else necessary for correct writing.
+
+    The AI only provides corrections for words/phrases that have changed. If the original
+    text is the same as the corrected text, then the AI does not provide a correction.
+
+    The AI knows that each sentence may contain multiple errors and provides corrections for
+    all errors in the sentence. It also knows that some sentences will not contain any errors
+    and does not provide corrections for those sentences.
+
+    If the AI does not know the answer to a question, it truthfully says it does not know.
+
+    Current conversation:
+    {history}
+    Human: {input}
+    AI: Let's think step by step"""
+    correction_prompt = PromptTemplate(input_variables=["history", "input"], template=correction_template)
+
+    memory = ConversationTokenBufferMemory(llm=llm, max_token_limit=MODEL_TOKEN_LIMIT)
+
+    input_1 = 'Hallo, ich heisse Adam. Ich habe 25 Jahre alt.'
+    output_1 = dedent("""
+    Let's think step by step
+    ## Corrected Text
+    
+    Ich heiße Adam. Ich bin 25 Jahre alt.
+
+    ## Reasons
+    1. Corrected spelling of 'heisse' to 'heiße' because 'heiße' is the correct spelling in German
+    2. Corrected 'alt' to 'bin' because 'bin' is the correct verb to use when stating one's age in German.""")
+    memory.save_context(
+        {'input': input_1},
+        {'output': output_1}
+    )
+
+    input_2 = 'Ich bin 25 Jahre alt'
+    output_2 = dedent("""
+    Let's think step by step
+    ## Corrected Text
+    
+    Ich bin 25 Jahre alt.
+
+    ## Reasons
+    1. Added full stop to the end of the sentence because it is a complete sentence.""")
+    memory.save_context(
+        {'input': input_2},
+        {'output': output_2}
+    )
+
+    input_3 = "Ich habe eine Katze. Sie ist schwarz und klein."
+    output_3 = dedent("""
+    Let's think step by step
+    ## Corrected Text
+    
+    Ich habe eine Katze. Sie ist schwarz und klein.
+
+    ## Reasons
+    1. No corrections needed. The text is grammatically correct and natural.""")
+
+    memory.save_context(
+        {'input': input_3},
+        {'output': output_3}
+    )
+
+    input_4 = "Ich wohne auf England fuer 15 Jahren."
+    output_4 = dedent("""
+    Let's think step by step
+    ## Corrected Text
+    
+    Ich wohne in England seit 15 Jahren.
+
+    ## Reasons
+    1. Corrected 'auf' to 'in' because 'in' is the correct preposition to use when talking about living in a country.
+    2. Corrected 'fuer' to 'seit' because 'seit' is the correct preposition to use when talking about the duration of time.
+    """)
+    memory.save_context(
+        {'input': input_4},
+        {'output': output_4}
+    )
+
+    conversation = ConversationChain(
+        llm=llm,
+        memory=memory,
+        verbose=False,
+        prompt=correction_prompt,
+    )
+
+    response = conversation.predict(input=prompt)
+    return response
+
+
 # Intro
 intro = """👋 Hi! I'm Langy, an AI bot to help you improve your foreign language writing skills. ✍️
 
@@ -138,7 +246,6 @@ if prompt := st.chat_input("Enter some text to get corrections"):
     # Display assistant response in chat message container
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
-        # full_response = ""
         response = classify_text_level(prompt, message_placeholder)
         cefr_text = (
             "\n\nSee [Common European Framework of Reference for Languages]"
@@ -149,6 +256,7 @@ if prompt := st.chat_input("Enter some text to get corrections"):
             response['reason_level'] += letter
             message_placeholder.markdown(response['reason_level'] + "▌")
         message_placeholder.markdown(response['reason_level'])
+        correction = correct_text(prompt, message_placeholder, message_contents=response['reason_level'] + "\n\n")
 
 
 def main():
