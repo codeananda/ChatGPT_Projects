@@ -1,5 +1,5 @@
-from typing import Any
 from textwrap import dedent
+from typing import Any
 
 import openai
 import streamlit as st
@@ -7,6 +7,7 @@ from langchain import PromptTemplate, ConversationChain
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
+from langchain.llms import OpenAI
 from langchain.memory import ConversationTokenBufferMemory
 from langchain.output_parsers import PydanticOutputParser
 from langchain.prompts import (
@@ -15,6 +16,7 @@ from langchain.prompts import (
 )
 from langchain.schema import LLMResult
 from pydantic import BaseModel, Field
+from redlines import Redlines
 
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 openai.organization = st.secrets["OPENAI_ORG_ID"]
@@ -58,7 +60,7 @@ class StreamingStreamlitCallbackHandler(BaseCallbackHandler):
         )
 
 
-def classify_text_level(prompt, message_placeholder):
+def classify_text_level(prompt, message_placeholder) -> str:
     """Classify the prompt based on the Common European Framework of Reference. Prompt
     is assumed to be text in a foreign language that the user wants help with."""
     llm = ChatOpenAI(
@@ -68,7 +70,7 @@ def classify_text_level(prompt, message_placeholder):
     )
 
     template_reason_level = """Classify the text based on the Common European Framework of Reference
-    for Languages (CEFR), provide 2-3 sentence reasons for your answer.
+    for Languages (CEFR), provide maxiumum 200 words for your answer.
 
     Text: {text}
 
@@ -111,10 +113,20 @@ def classify_text_level(prompt, message_placeholder):
     )
 
     response = chain_reason_level({"text": prompt})
-    return response
+    # Add cefr_text explanation to bottom
+    cefr_text = (
+        "\n\nSee [Common European Framework of Reference for Languages]"
+        "(https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages)"
+        " for more information on language levels."
+    )
+    for letter in cefr_text:
+        response["reason_level"] += letter
+        message_placeholder.markdown(response["reason_level"] + "▌")
+    message_placeholder.markdown(response["reason_level"])
+    return response["reason_level"]
 
 
-def correct_text(prompt, message_placeholder, message_contents=""):
+def correct_text(prompt, message_placeholder, message_contents="") -> str:
     llm = ChatOpenAI(
         temperature=0,
         streaming=True,
@@ -222,6 +234,38 @@ def correct_text(prompt, message_placeholder, message_contents=""):
     return response
 
 
+def parse_corrections(correction_and_reasons):
+    """Extract the corrections/reasons from input and store in Pydantic object."""
+    llm = ChatOpenAI(
+        temperature=0,
+    )
+
+    template = """Extract the corrections and reasons for them from the text.
+
+    Text: ####{text}####
+
+    {format_instructions}
+     """
+
+    class Output(BaseModel):
+        corrected_text: str = Field(description="The corrected text (no heading)")
+        reasons: list[str] = Field(description="The list of reasons.")
+
+    parser = PydanticOutputParser(pydantic_object=Output)
+
+    prompt_template = ChatPromptTemplate(
+        messages=[HumanMessagePromptTemplate.from_template(template)],
+        input_variables=["text"],
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+    )
+
+    chain = LLMChain(llm=llm, prompt=prompt_template, output_key="output")
+
+    output = chain({"text": correction_and_reasons})
+    results = parser.parse(output["output"])
+    return results
+
+
 # Intro
 intro = """👋 Hi! I'm Langy, an AI bot to help you improve your foreign language writing skills. ✍️
 
@@ -257,19 +301,22 @@ if prompt := st.chat_input("Enter some text to get corrections"):
     # Display assistant response in chat message container
     with st.chat_message("assistant"):
         message_placeholder = st.empty()
-        response = classify_text_level(prompt, message_placeholder)
-        cefr_text = (
-            "\n\nSee [Common European Framework of Reference for Languages]"
-            "(https://en.wikipedia.org/wiki/Common_European_Framework_of_Reference_for_Languages)"
-            " for more information on language levels."
+        text_class = classify_text_level(prompt, message_placeholder)
+        text_correct = correct_text(
+            prompt, message_placeholder, message_contents=text_class + "\n\n"
         )
-        for letter in cefr_text:
-            response["reason_level"] += letter
-            message_placeholder.markdown(response["reason_level"] + "▌")
-        message_placeholder.markdown(response["reason_level"])
-        correction = correct_text(
-            prompt, message_placeholder, message_contents=response["reason_level"] + "\n\n"
-        )
+        text_correct = parse_corrections(text_correct)
+        comparison = Redlines(prompt, text_correct.corrected_text)
+        comparison = comparison.output_markdown
+
+        final_response = f"{text_class}\n\n"
+        final_response += "## Corrected Text\n\n"
+        final_response += f"{comparison}\n\n"
+        final_response += "## Reasons\n\n"
+        for reason in text_correct.reasons:
+            final_response += f"1. {reason}\n"
+
+        message_placeholder.markdown(final_response, unsafe_allow_html=True)
 
 
 def main():
