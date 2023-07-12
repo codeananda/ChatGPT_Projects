@@ -55,9 +55,6 @@ class StreamingStreamlitCallbackHandler(BaseCallbackHandler):
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
         """Run when LLM ends running."""
         self.message_placeholder.markdown(self.message_contents)
-        st.session_state.messages.append(
-            {"role": "assistant", "content": self.message_contents}
-        )
 
 
 def classify_text_level(prompt, message_placeholder) -> str:
@@ -289,7 +286,7 @@ if clear_button:
 # Display chat messages from history on app rerun
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+        st.markdown(message["content"], unsafe_allow_html=True)
 
 # Accept user input
 if prompt := st.chat_input("Enter some text to get corrections"):
@@ -316,11 +313,6 @@ if prompt := st.chat_input("Enter some text to get corrections"):
         for reason in text_correct.reasons:
             final_response += f"1. {reason}\n"
 
+        message_placeholder.empty()
         message_placeholder.markdown(final_response, unsafe_allow_html=True)
-
-
-def main():
-    pass
-
-
-main()
+        st.session_state.messages.append({"role": "assistant", "content": final_response})
